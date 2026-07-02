@@ -3,41 +3,64 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Loader2, Lock } from "lucide-react";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { AlertTriangle, Eye, EyeOff, Loader2, Lock, Mail } from "lucide-react";
 import { business } from "@/config/business";
-import { ADMIN_FLAG_KEY, ADMIN_PASSWORD } from "@/lib/constants";
+import { getFirebaseAuth } from "@/lib/firebaseAuth";
+import { useAuth } from "@/lib/useAuth";
+
+function mapAuthError(code: string): string {
+  switch (code) {
+    case "auth/invalid-email":
+      return "Geçersiz e-posta adresi.";
+    case "auth/user-disabled":
+      return "Bu hesap devre dışı bırakılmış.";
+    case "auth/invalid-credential":
+    case "auth/wrong-password":
+    case "auth/user-not-found":
+      return "E-posta veya şifre hatalı.";
+    case "auth/too-many-requests":
+      return "Çok fazla deneme. Lütfen biraz sonra tekrar deneyin.";
+    default:
+      return "Giriş yapılamadı. Lütfen tekrar deneyin.";
+  }
+}
 
 export default function AdminLoginPage() {
   const router = useRouter();
+  const { user, ready, configured } = useAuth();
+
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
-  // Already "logged in" for the demo → go straight to the dashboard.
+  // Already signed in → straight to the dashboard.
   useEffect(() => {
-    if (
-      typeof window !== "undefined" &&
-      window.localStorage.getItem(ADMIN_FLAG_KEY) === "1"
-    ) {
-      router.replace("/admin");
-    }
-  }, [router]);
+    if (ready && user) router.replace("/admin");
+  }, [ready, user, router]);
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const auth = getFirebaseAuth();
+    if (!auth) {
+      setError("Firebase henüz yapılandırılmadı.");
+      return;
+    }
     setError("");
     setBusy(true);
-    // Small delay purely for the demo spinner feel.
-    window.setTimeout(() => {
-      if (password === ADMIN_PASSWORD) {
-        window.localStorage.setItem(ADMIN_FLAG_KEY, "1");
-        router.replace("/admin");
-      } else {
-        setError("Şifre hatalı. Lütfen tekrar deneyin.");
-        setBusy(false);
-      }
-    }, 400);
+    try {
+      await signInWithEmailAndPassword(auth, email.trim(), password);
+      router.replace("/admin");
+    } catch (err) {
+      const code =
+        typeof err === "object" && err && "code" in err
+          ? String((err as { code: string }).code)
+          : "";
+      setError(mapAuthError(code));
+      setBusy(false);
+    }
   };
 
   return (
@@ -60,7 +83,38 @@ export default function AdminLoginPage() {
           </p>
         </div>
 
+        {!configured && (
+          <div className="mt-5 flex items-start gap-2 rounded-xl border border-coral/30 bg-coral/10 px-3 py-2.5 text-xs text-ink-soft">
+            <AlertTriangle
+              className="mt-0.5 h-4 w-4 shrink-0 text-coral"
+              aria-hidden="true"
+            />
+            <span>
+              Firebase yapılandırması bulunamadı. Yönetici girişi için{" "}
+              <code className="font-semibold">.env.local</code> dosyasına Firebase
+              bilgilerini ekleyin.
+            </span>
+          </div>
+        )}
+
         <form onSubmit={submit} className="mt-6 flex flex-col gap-3">
+          <label htmlFor="admin-email" className="sr-only">
+            E-posta
+          </label>
+          <div className="flex items-center gap-2 rounded-xl border border-line bg-foam px-3 focus-within:border-sea">
+            <Mail className="h-4 w-4 shrink-0 text-ink-muted" aria-hidden="true" />
+            <input
+              id="admin-email"
+              type="email"
+              inputMode="email"
+              autoComplete="username"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="E-posta"
+              className="min-h-[48px] w-full bg-transparent text-sm text-ink outline-none placeholder:text-ink-muted"
+            />
+          </div>
+
           <label htmlFor="admin-password" className="sr-only">
             Şifre
           </label>
@@ -69,10 +123,10 @@ export default function AdminLoginPage() {
             <input
               id="admin-password"
               type={show ? "text" : "password"}
+              autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Şifre"
-              autoComplete="current-password"
               className="min-h-[48px] w-full bg-transparent text-sm text-ink outline-none placeholder:text-ink-muted"
             />
             <button
@@ -93,17 +147,13 @@ export default function AdminLoginPage() {
 
           <button
             type="submit"
-            disabled={busy}
+            disabled={busy || !configured}
             className="mt-1 inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-sea px-4 text-sm font-semibold text-white shadow-warm transition-colors hover:bg-sea-deep disabled:opacity-60"
           >
             {busy && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
             Giriş
           </button>
         </form>
-
-        <p className="mt-5 rounded-xl bg-sea-wash px-3 py-2 text-center text-xs text-sea-deep">
-          Demo şifresi: <span className="font-semibold">{ADMIN_PASSWORD}</span>
-        </p>
       </div>
     </main>
   );

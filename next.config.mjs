@@ -7,6 +7,15 @@ const nextConfig = {
         protocol: "https",
         hostname: "images.unsplash.com",
       },
+      {
+        // Firebase Storage download URLs (product photos).
+        protocol: "https",
+        hostname: "firebasestorage.googleapis.com",
+      },
+      {
+        protocol: "https",
+        hostname: "**.firebasestorage.app",
+      },
     ],
   },
 };

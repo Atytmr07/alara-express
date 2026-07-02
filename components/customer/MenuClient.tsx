@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useMenuData } from "@/lib/useMenuData";
+import { useMenu } from "@/lib/useMenu";
 import BrandHeader from "./BrandHeader";
 import CategoryTabs from "./CategoryTabs";
 import MenuSection from "./MenuSection";
@@ -11,7 +11,7 @@ import MenuFooter from "./MenuFooter";
 // Single continuous menu: all categories stacked top-to-bottom. The sticky tab
 // bar jumps to a category's section and stays in sync via scroll-spy.
 export default function MenuClient() {
-  const { data } = useMenuData();
+  const { data } = useMenu();
 
   const sections = useMemo(
     () =>

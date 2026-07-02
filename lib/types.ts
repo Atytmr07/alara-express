@@ -9,8 +9,10 @@ export interface Category {
   name: string;
   /** Optional short line shown under the section header. */
   subtitle?: string;
-  /** Hero image shown on the category tile. */
+  /** Hero image shown on the category banner. */
   image?: string;
+  /** Display order (ascending). */
+  order?: number;
 }
 
 export interface Product {
@@ -29,10 +31,12 @@ export interface Product {
   price: number;
   /** Remote URL or base64 dataURL (admin uploads). Empty => branded fallback. */
   imageUrl: string;
-  /** Highlights the item with the coral "Günün Balığı" badge. */
+  /** Highlights the item with the coral "Şefin Önerisi" badge. */
   isFeatured: boolean;
   /** Only active products show on the customer menu. */
   isActive: boolean;
+  /** Display order within the category (ascending). */
+  order?: number;
 }
 
 export interface MenuData {

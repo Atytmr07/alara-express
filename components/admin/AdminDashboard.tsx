@@ -1,60 +1,83 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { signOut } from "firebase/auth";
 import {
+  DatabaseZap,
   ExternalLink,
   Loader2,
   LogOut,
   Plus,
-  RotateCcw,
 } from "lucide-react";
 import { business } from "@/config/business";
-import { ADMIN_FLAG_KEY } from "@/lib/constants";
-import { useMenuData } from "@/lib/useMenuData";
-import type { Product } from "@/lib/types";
+import { getFirebaseAuth } from "@/lib/firebaseAuth";
+import { useAuth } from "@/lib/useAuth";
+import { fetchMenu } from "@/lib/menuRepo";
+import {
+  addProduct,
+  deleteProduct,
+  seedMenu,
+  updateProduct,
+} from "@/lib/menuAdmin";
+import type { MenuData, Product } from "@/lib/types";
 import ProductTable from "./ProductTable";
 import ProductForm, { type ProductFormValues } from "./ProductForm";
 import ConfirmModal from "./ConfirmModal";
 import Toast from "./Toast";
 
+function errorMessage(e: unknown): string {
+  if (typeof e === "object" && e && "code" in e) {
+    const code = String((e as { code: string }).code);
+    if (code.includes("permission-denied")) {
+      return "Yetki reddedildi. Güvenlik kurallarını ve admin e-postasını kontrol edin.";
+    }
+  }
+  return e instanceof Error ? e.message : "Bir hata oluştu.";
+}
+
 export default function AdminDashboard() {
   const router = useRouter();
-  const {
-    data,
-    addProduct,
-    updateProduct,
-    deleteProduct,
-    setPrice,
-    toggleActive,
-    resetToSeed,
-  } = useMenuData();
+  const { user, ready } = useAuth();
 
-  const [authorized, setAuthorized] = useState<boolean | null>(null);
+  const [menu, setMenu] = useState<MenuData | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
-  const [confirmReset, setConfirmReset] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [seeding, setSeeding] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
-  // Client-side demo gate (NOT real auth).
+  // Auth guard.
   useEffect(() => {
-    const ok =
-      typeof window !== "undefined" &&
-      window.localStorage.getItem(ADMIN_FLAG_KEY) === "1";
-    if (!ok) router.replace("/admin/login");
-    else setAuthorized(true);
-  }, [router]);
+    if (ready && !user) router.replace("/admin/login");
+  }, [ready, user, router]);
 
-  if (!authorized) {
+  const load = useCallback(async () => {
+    try {
+      setMenu(await fetchMenu());
+    } catch {
+      setMenu({ categories: [], products: [] });
+    }
+  }, []);
+
+  // Load the menu once we have a session.
+  useEffect(() => {
+    if (user) load();
+  }, [user, load]);
+
+  if (!ready || !user) {
     return (
       <div className="flex min-h-screen items-center justify-center text-sea">
         <Loader2 className="h-6 w-6 animate-spin" aria-hidden="true" />
       </div>
     );
   }
+
+  const patchProducts = (fn: (products: Product[]) => Product[]) =>
+    setMenu((m) => (m ? { ...m, products: fn(m.products) } : m));
 
   const openAdd = () => {
     setEditing(null);
@@ -66,39 +89,92 @@ export default function AdminDashboard() {
     setFormOpen(true);
   };
 
-  const handleSubmit = (values: ProductFormValues) => {
-    if (editing) {
-      updateProduct({ ...editing, ...values });
-      setToast("Ürün güncellendi");
-    } else {
-      addProduct(values);
-      setToast("Ürün eklendi");
+  const handleSubmit = async (values: ProductFormValues) => {
+    setBusy(true);
+    try {
+      if (editing) {
+        const updated: Product = { ...editing, ...values };
+        await updateProduct(updated);
+        patchProducts((ps) => ps.map((p) => (p.id === updated.id ? updated : p)));
+        setToast("Ürün güncellendi");
+      } else {
+        const id = await addProduct(values);
+        const created: Product = { ...values, id, order: Date.now() };
+        patchProducts((ps) => [...ps, created]);
+        setToast("Ürün eklendi");
+      }
+      setFormOpen(false);
+      setEditing(null);
+    } catch (e) {
+      setToast(errorMessage(e));
+    } finally {
+      setBusy(false);
     }
-    setFormOpen(false);
-    setEditing(null);
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!deleteTarget) return;
-    deleteProduct(deleteTarget.id);
-    setToast("Ürün silindi");
-    setDeleteTarget(null);
+    setBusy(true);
+    try {
+      await deleteProduct(deleteTarget.id);
+      patchProducts((ps) => ps.filter((p) => p.id !== deleteTarget.id));
+      setToast("Ürün silindi");
+      setDeleteTarget(null);
+    } catch (e) {
+      setToast(errorMessage(e));
+    } finally {
+      setBusy(false);
+    }
   };
 
-  const handleReset = () => {
-    resetToSeed();
-    setConfirmReset(false);
-    setToast("Demo menüsü sıfırlandı");
+  const handlePriceChange = async (id: string, price: number) => {
+    const product = menu?.products.find((p) => p.id === id);
+    if (!product) return;
+    const updated = { ...product, price };
+    try {
+      await updateProduct(updated);
+      patchProducts((ps) => ps.map((p) => (p.id === id ? updated : p)));
+    } catch (e) {
+      setToast(errorMessage(e));
+    }
   };
 
-  const logout = () => {
-    window.localStorage.removeItem(ADMIN_FLAG_KEY);
+  const handleToggleActive = async (id: string) => {
+    const product = menu?.products.find((p) => p.id === id);
+    if (!product) return;
+    const updated = { ...product, isActive: !product.isActive };
+    try {
+      await updateProduct(updated);
+      patchProducts((ps) => ps.map((p) => (p.id === id ? updated : p)));
+    } catch (e) {
+      setToast(errorMessage(e));
+    }
+  };
+
+  const handleSeed = async () => {
+    setSeeding(true);
+    try {
+      await seedMenu();
+      await load();
+      setToast("Demo menüsü Firestore'a yüklendi");
+    } catch (e) {
+      setToast(errorMessage(e));
+    } finally {
+      setSeeding(false);
+    }
+  };
+
+  const logout = async () => {
+    const auth = getFirebaseAuth();
+    if (auth) await signOut(auth);
     router.replace("/admin/login");
   };
 
-  const total = data.products.length;
-  const active = data.products.filter((p) => p.isActive).length;
-  const featured = data.products.filter((p) => p.isFeatured).length;
+  const categories = menu?.categories ?? [];
+  const products = menu?.products ?? [];
+  const total = products.length;
+  const active = products.filter((p) => p.isActive).length;
+  const featured = products.filter((p) => p.isFeatured).length;
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 pb-28 pt-6">
@@ -116,7 +192,9 @@ export default function AdminDashboard() {
             <h1 className="font-display text-xl font-semibold text-ink">
               Yönetim Paneli
             </h1>
-            <p className="text-xs text-ink-muted">Demo · {business.name}</p>
+            <p className="max-w-[180px] truncate text-xs text-ink-muted">
+              {user.email}
+            </p>
           </div>
         </div>
 
@@ -124,6 +202,7 @@ export default function AdminDashboard() {
           <Link
             href="/menu"
             target="_blank"
+            rel="noopener noreferrer"
             className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-line bg-foam px-3 text-sm font-semibold text-ink-soft transition-colors hover:bg-sea-wash"
           >
             <ExternalLink className="h-4 w-4 text-sea" aria-hidden="true" />
@@ -151,7 +230,7 @@ export default function AdminDashboard() {
             key={stat.label}
             className="rounded-xl border border-line bg-foam px-3 py-3 text-center"
           >
-            <p className="font-display text-2xl font-semibold text-ink tabular-nums">
+            <p className="font-display text-2xl font-semibold tabular-nums text-ink">
               {stat.value}
             </p>
             <p className="text-xs text-ink-muted">{stat.label}</p>
@@ -164,36 +243,50 @@ export default function AdminDashboard() {
         <button
           type="button"
           onClick={openAdd}
-          className="inline-flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-xl bg-sea px-4 text-sm font-semibold text-white shadow-warm transition-colors hover:bg-sea-deep"
+          disabled={menu === null}
+          className="inline-flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-xl bg-sea px-4 text-sm font-semibold text-white shadow-warm transition-colors hover:bg-sea-deep disabled:opacity-60"
         >
           <Plus className="h-4 w-4" aria-hidden="true" />
           Yeni Ürün Ekle
-        </button>
-        <button
-          type="button"
-          onClick={() => setConfirmReset(true)}
-          aria-label="Demo menüsünü sıfırla"
-          className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl border border-line bg-foam px-4 text-sm font-semibold text-ink-soft transition-colors hover:bg-sand"
-        >
-          <RotateCcw className="h-4 w-4" aria-hidden="true" />
-          <span className="hidden sm:inline">Sıfırla</span>
         </button>
       </div>
 
       {/* Product list */}
       <div className="mt-6">
-        {total === 0 ? (
-          <p className="rounded-xl border border-dashed border-line bg-foam px-4 py-12 text-center text-sm text-ink-muted">
-            Henüz ürün yok. “Yeni Ürün Ekle” ile başlayın.
-          </p>
+        {menu === null ? (
+          <div className="flex justify-center py-16 text-sea">
+            <Loader2 className="h-6 w-6 animate-spin" aria-hidden="true" />
+          </div>
+        ) : total === 0 ? (
+          <div className="rounded-xl border border-dashed border-line bg-foam px-4 py-12 text-center">
+            <p className="text-sm text-ink-soft">
+              Firestore menüsü boş görünüyor.
+            </p>
+            <p className="mt-1 text-xs text-ink-muted">
+              Başlangıç menüsünü (8 kategori, 27 ürün) tek tıkla yükleyin.
+            </p>
+            <button
+              type="button"
+              onClick={handleSeed}
+              disabled={seeding}
+              className="mt-4 inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-sea px-5 text-sm font-semibold text-white shadow-warm transition-colors hover:bg-sea-deep disabled:opacity-60"
+            >
+              {seeding ? (
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+              ) : (
+                <DatabaseZap className="h-4 w-4" aria-hidden="true" />
+              )}
+              Demo menüsünü yükle
+            </button>
+          </div>
         ) : (
           <ProductTable
-            categories={data.categories}
-            products={data.products}
+            categories={categories}
+            products={products}
             onEdit={openEdit}
             onDelete={setDeleteTarget}
-            onPriceChange={setPrice}
-            onToggleActive={toggleActive}
+            onPriceChange={handlePriceChange}
+            onToggleActive={handleToggleActive}
           />
         )}
       </div>
@@ -202,7 +295,8 @@ export default function AdminDashboard() {
       <ProductForm
         open={formOpen}
         editing={editing}
-        categories={data.categories}
+        categories={categories}
+        busy={busy}
         onSubmit={handleSubmit}
         onCancel={() => {
           setFormOpen(false);
@@ -219,17 +313,9 @@ export default function AdminDashboard() {
             : ""
         }
         confirmLabel="Sil"
+        busy={busy}
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}
-      />
-
-      <ConfirmModal
-        open={confirmReset}
-        title="Demoyu sıfırla"
-        message="Tüm değişiklikler silinip başlangıç menüsü geri yüklenecek."
-        confirmLabel="Sıfırla"
-        onConfirm={handleReset}
-        onCancel={() => setConfirmReset(false)}
       />
 
       <Toast message={toast} onDismiss={() => setToast(null)} />

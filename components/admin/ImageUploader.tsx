@@ -2,9 +2,22 @@
 
 import { useRef, useState } from "react";
 import { ImagePlus, Link2, Loader2, X } from "lucide-react";
+import { isFirebaseConfigured } from "@/lib/firebase";
+import { uploadProductImage } from "@/lib/menuAdmin";
 
-// Demo image handling: read a photo from the device (or camera) as a base64
-// dataURL and store it directly — no server. A URL field is also offered.
+const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
+
+function readAsDataURL(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+}
+
+// Uploads the chosen photo to Firebase Storage and stores its download URL.
+// Falls back to an inline base64 dataURL when Firebase isn't configured (demo).
 export default function ImageUploader({
   value,
   onChange,
@@ -16,27 +29,29 @@ export default function ImageUploader({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setError("");
 
-    if (file.size > 3.5 * 1024 * 1024) {
-      setError("Görsel çok büyük (maks. 3.5MB). Daha küçük bir fotoğraf seçin.");
+    if (file.size > MAX_BYTES) {
+      setError("Görsel çok büyük (maks. 5MB). Daha küçük bir fotoğraf seçin.");
       return;
     }
 
     setLoading(true);
-    const reader = new FileReader();
-    reader.onload = () => {
-      onChange(String(reader.result));
+    try {
+      const url = isFirebaseConfigured
+        ? await uploadProductImage(file)
+        : await readAsDataURL(file);
+      onChange(url);
+    } catch {
+      setError("Görsel yüklenemedi. Lütfen tekrar deneyin.");
+    } finally {
       setLoading(false);
-    };
-    reader.onerror = () => {
-      setError("Görsel okunamadı. Lütfen tekrar deneyin.");
-      setLoading(false);
-    };
-    reader.readAsDataURL(file);
+      // Allow re-selecting the same file later.
+      if (inputRef.current) inputRef.current.value = "";
+    }
   };
 
   return (
@@ -77,9 +92,14 @@ export default function ImageUploader({
           <button
             type="button"
             onClick={() => inputRef.current?.click()}
-            className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-line bg-foam px-3 text-sm font-semibold text-ink transition-colors hover:bg-sand"
+            disabled={loading}
+            className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-line bg-foam px-3 text-sm font-semibold text-ink transition-colors hover:bg-sand disabled:opacity-60"
           >
-            <ImagePlus className="h-4 w-4 text-sea" aria-hidden="true" />
+            {loading ? (
+              <Loader2 className="h-4 w-4 animate-spin text-sea" aria-hidden="true" />
+            ) : (
+              <ImagePlus className="h-4 w-4 text-sea" aria-hidden="true" />
+            )}
             Fotoğraf Seç / Çek
           </button>
 
