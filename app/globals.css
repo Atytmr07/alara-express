@@ -1,0 +1,81 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------------------------------------------------------------------------
+   Aegean Coastal Editorial — design tokens (mirror of tailwind.config colors,
+   exposed as CSS variables for raw SVG strokes, grain and inline styles).
+--------------------------------------------------------------------------- */
+:root {
+  --sea-teal: #09a7aa;
+  --sea-teal-deep: #067a7d;
+  --sea-teal-wash: #e4f4f4;
+  --ink: #2d2a31;
+  --ink-soft: #4a464e;
+  --ink-muted: #8b8690;
+  --sand: #f5efe6;
+  --shell: #fbf8f3;
+  --foam: #ffffff;
+  --border: #e8e0d4;
+  --coral: #e8825a;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--sand);
+    color: var(--ink-soft);
+    font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: -0.006em;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    /* Never allow horizontal scroll on the phone-first surface. */
+    overflow-x: hidden;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+    color: var(--ink);
+    letter-spacing: -0.02em;
+  }
+
+  /* Respect reduced-motion at the platform level too. */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+    }
+  }
+}
+
+@layer utilities {
+  /* Hide scrollbars on the horizontal category tab strip. */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .font-display {
+    font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  }
+
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+}
