@@ -1,11 +1,11 @@
 import type { Category, Product } from "@/lib/types";
 
 // -----------------------------------------------------------------------------
-// MOCK MENU — the single source of truth that seeds the demo.
+// STARTER MENU — the source used to seed Firestore and as the read fallback.
 // Every category is populated and every product has a real photo, price,
 // description, allergens, energy (kcal) and portion so the menu looks full and
 // complies with TR's transparent-menu rule (enerji + gramaj on menus).
-// (Admin edits are layered on top of this via localStorage — see useMenuData.)
+// (In production this seeds Firestore; admin edits then live in Firestore.)
 // -----------------------------------------------------------------------------
 
 /** Build a tuned Unsplash URL. All ids below were verified to resolve (200). */
@@ -440,7 +440,7 @@ export const PRODUCTS: Product[] = [
   },
 ];
 
-/** Immutable snapshot used to (re)seed localStorage for the demo. */
+/** Immutable snapshot used to seed Firestore and as the read fallback. */
 export const INITIAL_MENU = {
   categories: CATEGORIES,
   products: PRODUCTS,

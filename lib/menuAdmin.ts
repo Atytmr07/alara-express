@@ -14,7 +14,7 @@ import {
 import { getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
 import { getDb, getFirebaseApp } from "./firebase";
 import { CATEGORIES_COL, mockMenu, PRODUCTS_COL } from "./menuRepo";
-import type { Product } from "./types";
+import type { Category, Product } from "./types";
 
 function requireDb() {
   const db = getDb();
@@ -57,6 +57,27 @@ export async function updateProduct(product: Product): Promise<void> {
 export async function deleteProduct(id: string): Promise<void> {
   const db = requireDb();
   await deleteDoc(doc(db, PRODUCTS_COL, id));
+}
+
+// --- Categories ---------------------------------------------------------------
+
+export async function addCategory(data: Omit<Category, "id">): Promise<string> {
+  const db = requireDb();
+  const created = await addDoc(collection(db, CATEGORIES_COL), clean(data));
+  return created.id;
+}
+
+export async function updateCategory(category: Category): Promise<void> {
+  const db = requireDb();
+  await updateDoc(
+    doc(db, CATEGORIES_COL, category.id),
+    clean(stripId(category)) as UpdateData<Record<string, unknown>>,
+  );
+}
+
+export async function deleteCategory(id: string): Promise<void> {
+  const db = requireDb();
+  await deleteDoc(doc(db, CATEGORIES_COL, id));
 }
 
 /** One-time (idempotent) seed of categories + products from the mock menu. */

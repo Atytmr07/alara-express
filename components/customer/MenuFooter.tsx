@@ -98,9 +98,6 @@ export default function MenuFooter() {
       <p className="mt-6 text-xs text-ink-muted">
         © {year} {business.name}
       </p>
-      <p className="mt-1 text-[11px] text-ink-muted">
-        QR Dijital Menü · Demo
-      </p>
     </footer>
   );
 }

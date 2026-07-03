@@ -17,7 +17,7 @@ function readAsDataURL(file: File): Promise<string> {
 }
 
 // Uploads the chosen photo to Firebase Storage and stores its download URL.
-// Falls back to an inline base64 dataURL when Firebase isn't configured (demo).
+// Falls back to an inline base64 dataURL only when Firebase isn't configured.
 export default function ImageUploader({
   value,
   onChange,

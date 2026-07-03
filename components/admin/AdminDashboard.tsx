@@ -17,14 +17,20 @@ import { getFirebaseAuth } from "@/lib/firebaseAuth";
 import { useAuth } from "@/lib/useAuth";
 import { fetchMenu } from "@/lib/menuRepo";
 import {
+  addCategory,
   addProduct,
+  deleteCategory,
   deleteProduct,
   seedMenu,
+  updateCategory,
   updateProduct,
 } from "@/lib/menuAdmin";
-import type { MenuData, Product } from "@/lib/types";
+import { uniqueSlug } from "@/lib/slug";
+import type { Category, MenuData, Product } from "@/lib/types";
 import ProductTable from "./ProductTable";
 import ProductForm, { type ProductFormValues } from "./ProductForm";
+import CategoryManager from "./CategoryManager";
+import CategoryForm, { type CategoryFormValues } from "./CategoryForm";
 import ConfirmModal from "./ConfirmModal";
 import Toast from "./Toast";
 
@@ -46,6 +52,10 @@ export default function AdminDashboard() {
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
+  const [categoryFormOpen, setCategoryFormOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [deleteCategoryTarget, setDeleteCategoryTarget] =
+    useState<Category | null>(null);
   const [busy, setBusy] = useState(false);
   const [seeding, setSeeding] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
@@ -78,6 +88,82 @@ export default function AdminDashboard() {
 
   const patchProducts = (fn: (products: Product[]) => Product[]) =>
     setMenu((m) => (m ? { ...m, products: fn(m.products) } : m));
+
+  const patchCategories = (fn: (categories: Category[]) => Category[]) =>
+    setMenu((m) => (m ? { ...m, categories: fn(m.categories) } : m));
+
+  const openAddCategory = () => {
+    setEditingCategory(null);
+    setCategoryFormOpen(true);
+  };
+
+  const openEditCategory = (category: Category) => {
+    setEditingCategory(category);
+    setCategoryFormOpen(true);
+  };
+
+  const handleCategorySubmit = async (values: CategoryFormValues) => {
+    setBusy(true);
+    try {
+      if (editingCategory) {
+        const updated: Category = { ...editingCategory, ...values };
+        await updateCategory(updated);
+        patchCategories((cs) =>
+          cs.map((c) => (c.id === updated.id ? updated : c)),
+        );
+        setToast("Kategori güncellendi");
+      } else {
+        const cats = menu?.categories ?? [];
+        const existingSlugs = new Set(
+          cats.map((c) => c.slug).filter(Boolean) as string[],
+        );
+        const order = cats.reduce((max, c) => Math.max(max, c.order ?? 0), 0) + 1;
+        const data: Omit<Category, "id"> = {
+          ...values,
+          slug: uniqueSlug(values.name, existingSlugs),
+          order,
+        };
+        const id = await addCategory(data);
+        patchCategories((cs) => [...cs, { ...data, id }]);
+        setToast("Kategori eklendi");
+      }
+      setCategoryFormOpen(false);
+      setEditingCategory(null);
+    } catch (e) {
+      setToast(errorMessage(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const requestDeleteCategory = (category: Category) => {
+    const count =
+      menu?.products.filter((p) => p.categoryId === category.id).length ?? 0;
+    if (count > 0) {
+      setToast(
+        `“${category.name}” içinde ${count} ürün var. Önce ürünleri silin veya taşıyın.`,
+      );
+      return;
+    }
+    setDeleteCategoryTarget(category);
+  };
+
+  const handleDeleteCategory = async () => {
+    if (!deleteCategoryTarget) return;
+    setBusy(true);
+    try {
+      await deleteCategory(deleteCategoryTarget.id);
+      patchCategories((cs) =>
+        cs.filter((c) => c.id !== deleteCategoryTarget.id),
+      );
+      setToast("Kategori silindi");
+      setDeleteCategoryTarget(null);
+    } catch (e) {
+      setToast(errorMessage(e));
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const openAdd = () => {
     setEditing(null);
@@ -156,7 +242,7 @@ export default function AdminDashboard() {
     try {
       await seedMenu();
       await load();
-      setToast("Demo menüsü Firestore'a yüklendi");
+      setToast("Başlangıç menüsü yüklendi");
     } catch (e) {
       setToast(errorMessage(e));
     } finally {
@@ -251,6 +337,19 @@ export default function AdminDashboard() {
         </button>
       </div>
 
+      {/* Category management */}
+      {menu !== null && (
+        <div className="mt-4">
+          <CategoryManager
+            categories={categories}
+            products={products}
+            onAdd={openAddCategory}
+            onEdit={openEditCategory}
+            onDelete={requestDeleteCategory}
+          />
+        </div>
+      )}
+
       {/* Product list */}
       <div className="mt-6">
         {menu === null ? (
@@ -276,7 +375,7 @@ export default function AdminDashboard() {
               ) : (
                 <DatabaseZap className="h-4 w-4" aria-hidden="true" />
               )}
-              Demo menüsünü yükle
+              Başlangıç menüsünü yükle
             </button>
           </div>
         ) : (
@@ -316,6 +415,31 @@ export default function AdminDashboard() {
         busy={busy}
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}
+      />
+
+      <CategoryForm
+        open={categoryFormOpen}
+        editing={editingCategory}
+        busy={busy}
+        onSubmit={handleCategorySubmit}
+        onCancel={() => {
+          setCategoryFormOpen(false);
+          setEditingCategory(null);
+        }}
+      />
+
+      <ConfirmModal
+        open={Boolean(deleteCategoryTarget)}
+        title="Kategoriyi sil"
+        message={
+          deleteCategoryTarget
+            ? `“${deleteCategoryTarget.name}” kategorisi silinecek. Bu işlem geri alınamaz.`
+            : ""
+        }
+        confirmLabel="Sil"
+        busy={busy}
+        onConfirm={handleDeleteCategory}
+        onCancel={() => setDeleteCategoryTarget(null)}
       />
 
       <Toast message={toast} onDismiss={() => setToast(null)} />

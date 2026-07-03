@@ -1,6 +1,6 @@
 import AdminDashboard from "@/components/admin/AdminDashboard";
 
-// Dashboard is fully client-driven (localStorage store + demo gate).
+// Client-driven dashboard: auth via Firebase Auth, data via Firestore.
 export default function AdminPage() {
   return <AdminDashboard />;
 }

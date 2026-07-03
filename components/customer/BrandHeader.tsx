@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { motion, useReducedMotion } from "framer-motion";
-import { Star } from "lucide-react";
 import { business } from "@/config/business";
 
 // Sea-teal hero: the white logo reads crisp on teal, then a wave-cut melts the
@@ -35,19 +34,6 @@ export default function BrandHeader() {
         <p className="mt-4 font-sans text-[15px] italic text-white/90">
           {business.tagline}
         </p>
-
-        <div className="mt-3 flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-sm text-white backdrop-blur-sm">
-          <Star className="h-4 w-4 fill-coral text-coral" aria-hidden="true" />
-          <span className="font-semibold tabular-nums">
-            {business.googleRating}
-          </span>
-          <span className="text-white/60" aria-hidden="true">
-            ·
-          </span>
-          <span className="text-white/80">
-            {business.ratingCount} değerlendirme
-          </span>
-        </div>
       </div>
 
       {/* Wave-cut into the sand background */}
