@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -15,7 +15,7 @@ import {
 import { business } from "@/config/business";
 import { getFirebaseAuth } from "@/lib/firebaseAuth";
 import { useAuth } from "@/lib/useAuth";
-import { fetchMenu } from "@/lib/menuRepo";
+import { byOrder, fetchMenu } from "@/lib/menuRepo";
 import {
   addCategory,
   addProduct,
@@ -77,6 +77,15 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (user) load();
   }, [user, load]);
+
+  const categories = useMemo(
+    () => [...(menu?.categories ?? [])].sort(byOrder),
+    [menu],
+  );
+  const products = useMemo(
+    () => [...(menu?.products ?? [])].sort(byOrder),
+    [menu],
+  );
 
   if (!ready || !user) {
     return (
@@ -237,6 +246,45 @@ export default function AdminDashboard() {
     }
   };
 
+  // Reorder by swapping the order value with the neighbour (2 writes, optimistic).
+  const moveProduct = (id: string, direction: "up" | "down") => {
+    const current = products.find((p) => p.id === id);
+    if (!current) return;
+    const group = products.filter((p) => p.categoryId === current.categoryId);
+    const idx = group.findIndex((p) => p.id === id);
+    const targetIdx = direction === "up" ? idx - 1 : idx + 1;
+    if (targetIdx < 0 || targetIdx >= group.length) return;
+    const a = group[idx];
+    const b = group[targetIdx];
+    const aNew = { ...a, order: b.order ?? targetIdx };
+    const bNew = { ...b, order: a.order ?? idx };
+    patchProducts((ps) =>
+      ps.map((p) => (p.id === aNew.id ? aNew : p.id === bNew.id ? bNew : p)),
+    );
+    Promise.all([updateProduct(aNew), updateProduct(bNew)]).catch((e) => {
+      setToast(errorMessage(e));
+      load();
+    });
+  };
+
+  const moveCategory = (id: string, direction: "up" | "down") => {
+    const idx = categories.findIndex((c) => c.id === id);
+    if (idx < 0) return;
+    const targetIdx = direction === "up" ? idx - 1 : idx + 1;
+    if (targetIdx < 0 || targetIdx >= categories.length) return;
+    const a = categories[idx];
+    const b = categories[targetIdx];
+    const aNew = { ...a, order: b.order ?? targetIdx };
+    const bNew = { ...b, order: a.order ?? idx };
+    patchCategories((cs) =>
+      cs.map((c) => (c.id === aNew.id ? aNew : c.id === bNew.id ? bNew : c)),
+    );
+    Promise.all([updateCategory(aNew), updateCategory(bNew)]).catch((e) => {
+      setToast(errorMessage(e));
+      load();
+    });
+  };
+
   const handleSeed = async () => {
     setSeeding(true);
     try {
@@ -256,8 +304,6 @@ export default function AdminDashboard() {
     router.replace("/admin/login");
   };
 
-  const categories = menu?.categories ?? [];
-  const products = menu?.products ?? [];
   const total = products.length;
   const active = products.filter((p) => p.isActive).length;
   const featured = products.filter((p) => p.isFeatured).length;
@@ -346,6 +392,7 @@ export default function AdminDashboard() {
             onAdd={openAddCategory}
             onEdit={openEditCategory}
             onDelete={requestDeleteCategory}
+            onReorder={moveCategory}
           />
         </div>
       )}
@@ -386,6 +433,7 @@ export default function AdminDashboard() {
             onDelete={setDeleteTarget}
             onPriceChange={handlePriceChange}
             onToggleActive={handleToggleActive}
+            onReorder={moveProduct}
           />
         )}
       </div>

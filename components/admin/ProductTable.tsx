@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Pencil, Trash2 } from "lucide-react";
 import type { Category, Product } from "@/lib/types";
 import { formatCalories } from "@/lib/format";
+import ReorderControls from "./ReorderControls";
 
 // Inline price editor — commits on blur / Enter, reverts invalid input.
 function InlinePrice({
@@ -86,6 +87,7 @@ export default function ProductTable({
   onDelete,
   onPriceChange,
   onToggleActive,
+  onReorder,
 }: {
   categories: Category[];
   products: Product[];
@@ -93,6 +95,7 @@ export default function ProductTable({
   onDelete: (product: Product) => void;
   onPriceChange: (id: string, price: number) => void;
   onToggleActive: (id: string) => void;
+  onReorder: (id: string, direction: "up" | "down") => void;
 }) {
   return (
     <div className="flex flex-col gap-6">
@@ -112,12 +115,19 @@ export default function ProductTable({
             </div>
 
             <ul className="flex flex-col gap-2">
-              {items.map((product) => (
+              {items.map((product, i) => (
                 <li
                   key={product.id}
                   className="flex flex-col gap-3 rounded-xl border border-line bg-foam p-3 sm:flex-row sm:items-center"
                 >
-                  <div className="flex min-w-0 flex-1 items-center gap-3">
+                  <div className="flex min-w-0 flex-1 items-center gap-2.5">
+                    <ReorderControls
+                      label={product.name}
+                      canUp={i > 0}
+                      canDown={i < items.length - 1}
+                      onUp={() => onReorder(product.id, "up")}
+                      onDown={() => onReorder(product.id, "down")}
+                    />
                     <span className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-sea-wash">
                       {product.imageUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element

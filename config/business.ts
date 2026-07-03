@@ -14,6 +14,7 @@ export const business = {
   googleRating: 4.8,
   ratingCount: 960,
   googleMapsUrl: "https://maps.google.com/?q=Alara+Bal%C4%B1k+Express+Kepez+Antalya",
+  googleReviewUrl: "https://maps.app.goo.gl/qnAoJ541kPnF7eAo9",
 
   address: {
     full: "Kepez Balık Çarşısı ve Organik Ürün Pazarı No:4, 07090 Kepez/Antalya",

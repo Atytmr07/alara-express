@@ -3,20 +3,23 @@
 import { useState } from "react";
 import { ChevronDown, FolderPlus, Pencil, Trash2 } from "lucide-react";
 import type { Category, Product } from "@/lib/types";
+import ReorderControls from "./ReorderControls";
 
-// Collapsible category manager: add / edit / delete the menu's categories.
+// Collapsible category manager: add / edit / delete / reorder the categories.
 export default function CategoryManager({
   categories,
   products,
   onAdd,
   onEdit,
   onDelete,
+  onReorder,
 }: {
   categories: Category[];
   products: Product[];
   onAdd: () => void;
   onEdit: (category: Category) => void;
   onDelete: (category: Category) => void;
+  onReorder: (id: string, direction: "up" | "down") => void;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -54,15 +57,22 @@ export default function CategoryManager({
           </button>
 
           <ul className="flex flex-col gap-2">
-            {categories.map((category) => {
+            {categories.map((category, i) => {
               const count = products.filter(
                 (p) => p.categoryId === category.id,
               ).length;
               return (
                 <li
                   key={category.id}
-                  className="flex items-center gap-3 rounded-xl border border-line bg-shell p-2"
+                  className="flex items-center gap-2 rounded-xl border border-line bg-shell p-2"
                 >
+                  <ReorderControls
+                    label={category.name}
+                    canUp={i > 0}
+                    canDown={i < categories.length - 1}
+                    onUp={() => onReorder(category.id, "up")}
+                    onDown={() => onReorder(category.id, "down")}
+                  />
                   <span className="h-11 w-11 shrink-0 overflow-hidden rounded-lg bg-sea-wash">
                     {category.image ? (
                       // eslint-disable-next-line @next/next/no-img-element

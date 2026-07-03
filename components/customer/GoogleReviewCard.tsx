@@ -87,7 +87,7 @@ export default function GoogleReviewCard() {
         </p>
 
         <a
-          href={business.googleMapsUrl}
+          href={business.googleReviewUrl}
           target="_blank"
           rel="noopener noreferrer"
           aria-label="Google'da değerlendirin"
