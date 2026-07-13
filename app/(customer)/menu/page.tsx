@@ -74,17 +74,27 @@ function buildJsonLd() {
         ).map((product) => ({
           "@type": "MenuItem",
           name: product.name,
-          description: product.description,
-          nutrition: {
-            "@type": "NutritionInformation",
-            calories: `${product.calories} kcal`,
-            servingSize: product.portion,
-          },
-          offers: {
-            "@type": "Offer",
-            price: product.price,
-            priceCurrency: business.currencyCode,
-          },
+          ...(product.description ? { description: product.description } : {}),
+          ...(product.calories > 0
+            ? {
+                nutrition: {
+                  "@type": "NutritionInformation",
+                  calories: `${product.calories} kcal`,
+                  ...(product.portion
+                    ? { servingSize: product.portion }
+                    : {}),
+                },
+              }
+            : {}),
+          ...(product.price > 0
+            ? {
+                offers: {
+                  "@type": "Offer",
+                  price: product.price,
+                  priceCurrency: business.currencyCode,
+                },
+              }
+            : {}),
         })),
       })),
     },

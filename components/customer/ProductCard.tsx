@@ -124,21 +124,34 @@ export default function ProductCard({
 
           <div className="mt-1 flex items-end justify-between gap-2">
             <div className="min-w-0">
-              <span className="block font-sans text-base font-bold tabular-nums text-sea">
-                {formatPrice(product.price)}
-              </span>
-              <span className="mt-0.5 flex items-center gap-1 text-[11px] text-ink-muted">
-                <Flame className="h-3 w-3 shrink-0 text-coral" aria-hidden="true" />
-                <span className="tabular-nums">
-                  {formatCalories(product.calories)}
+              {product.price > 0 ? (
+                <span className="block font-sans text-base font-bold tabular-nums text-sea">
+                  {formatPrice(product.price)}
                 </span>
-                {product.portion && (
-                  <>
+              ) : (
+                <span className="block font-sans text-sm font-semibold text-sea">
+                  Sorunuz
+                </span>
+              )}
+              {(product.calories > 0 || product.portion) && (
+                <span className="mt-0.5 flex items-center gap-1 text-[11px] text-ink-muted">
+                  {product.calories > 0 && (
+                    <>
+                      <Flame
+                        className="h-3 w-3 shrink-0 text-coral"
+                        aria-hidden="true"
+                      />
+                      <span className="tabular-nums">
+                        {formatCalories(product.calories)}
+                      </span>
+                    </>
+                  )}
+                  {product.calories > 0 && product.portion && (
                     <span aria-hidden="true">·</span>
-                    <span>{product.portion}</span>
-                  </>
-                )}
-              </span>
+                  )}
+                  {product.portion && <span>{product.portion}</span>}
+                </span>
+              )}
             </div>
             <ChevronDown
               aria-hidden="true"
@@ -163,17 +176,21 @@ export default function ProductCard({
           >
             <div className="border-t border-line px-3.5 py-3 text-sm">
               <p className="text-ink-soft">{product.description}</p>
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center gap-1 rounded-full bg-sea-wash px-2.5 py-1 text-[12px] font-medium text-sea-deep">
-                  <Flame className="h-3 w-3" aria-hidden="true" />
-                  {formatCalories(product.calories)}
-                </span>
-                {product.portion && (
-                  <span className="inline-flex items-center rounded-full bg-sea-wash px-2.5 py-1 text-[12px] font-medium text-sea-deep">
-                    Porsiyon: {product.portion}
-                  </span>
-                )}
-              </div>
+              {(product.calories > 0 || product.portion) && (
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  {product.calories > 0 && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-sea-wash px-2.5 py-1 text-[12px] font-medium text-sea-deep">
+                      <Flame className="h-3 w-3" aria-hidden="true" />
+                      {formatCalories(product.calories)}
+                    </span>
+                  )}
+                  {product.portion && (
+                    <span className="inline-flex items-center rounded-full bg-sea-wash px-2.5 py-1 text-[12px] font-medium text-sea-deep">
+                      Porsiyon: {product.portion}
+                    </span>
+                  )}
+                </div>
+              )}
               <p className="mt-2 text-[13px] text-ink-muted">
                 <span className="font-semibold text-ink-soft">Alerjenler: </span>
                 {product.allergens
