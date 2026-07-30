@@ -13,7 +13,13 @@ const img = (id: string) =>
   `https://images.unsplash.com/photo-${id}?w=600&q=70&auto=format&fit=crop`;
 
 export const CATEGORIES: Category[] = [
-  { id: "corbalar", slug: "corbalar", name: "Çorbalar", subtitle: "Sıcacık başlangıçlar" },
+  {
+    id: "corbalar",
+    slug: "corbalar",
+    name: "Çorbalar",
+    subtitle: "Sıcacık başlangıçlar",
+    image: img("1476718406336-bb5a9690ee2a"),
+  },
   {
     id: "salatalar",
     slug: "salatalar",
