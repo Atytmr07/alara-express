@@ -4,12 +4,12 @@
 export const business = {
   name: "Alara Balık Express",
   shortName: "Alara Express",
-  tagline: "1975'ten beri Ege'nin en taze lezzetleri",
+  tagline: "1975'ten beri Akdeniz'in en taze lezzetleri",
   since: 1975,
   logo: "/LLOGO.png",
 
   about:
-    "Kepez Balık Çarşısı'nın içinde, 1975'ten bu yana ailemizle hizmet veren, alkolsüz bir balık restoranıyız. Akdeniz'in günlük taze avını tezgahtan seçebilir ya da mangalda pişmiş olarak sofranıza getirtebilirsiniz. Zengin meze ve ara sıcak çeşitleri, Ege zeytinyağlıları ve açık hava çatı terasımızla sizi bekliyoruz.",
+    "Kepez Balık Çarşısı'nın içinde, 1975'ten bu yana ailemizle hizmet veren, alkolsüz bir balık restoranıyız. Akdeniz'in günlük taze avını tezgahtan seçebilir ya da mangalda pişmiş olarak sofranıza getirtebilirsiniz. Zengin meze ve ara sıcak çeşitleri, Akdeniz zeytinyağlıları ve açık hava çatı terasımızla sizi bekliyoruz.",
 
   googleRating: 4.8,
   ratingCount: 960,

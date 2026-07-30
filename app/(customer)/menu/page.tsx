@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/menu" },
   openGraph: {
     title: `${business.name} — Menü`,
-    description: "1975'ten beri Ege'nin en taze lezzetleri. Tüm menüyü keşfedin.",
+    description: "1975'ten beri Akdeniz'in en taze lezzetleri. Tüm menüyü keşfedin.",
     url: "/menu",
   },
 };

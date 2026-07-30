@@ -51,7 +51,7 @@ export const metadata: Metadata = {
     siteName: business.name,
     title: `${business.name} — Dijital Menü`,
     description:
-      "1975'ten beri Ege'nin en taze lezzetleri. Meze, ara sıcak, ızgara balık ve daha fazlası.",
+      "1975'ten beri Akdeniz'in en taze lezzetleri. Meze, ara sıcak, ızgara balık ve daha fazlası.",
     images: [
       {
         url: business.logo,
@@ -64,7 +64,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: `${business.name} — Dijital Menü`,
-    description: "1975'ten beri Ege'nin en taze lezzetleri.",
+    description: "1975'ten beri Akdeniz'in en taze lezzetleri.",
     images: [business.logo],
   },
   icons: {
