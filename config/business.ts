@@ -39,7 +39,7 @@ export const business = {
   currencyCode: "TRY",
   locale: "tr_TR",
 
-  siteUrl: "https://alara-express.vercel.app",
+  siteUrl: "https://alaraexpressmenu.com.tr",
 } as const;
 
 /** Turns a display phone like "0242 446 11 11" into a tel: href. */
