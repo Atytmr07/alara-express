@@ -289,7 +289,7 @@ export default function ProductForm({
               <div className="flex items-center justify-between rounded-xl border border-line bg-foam px-4 py-3">
                 <div>
                   <p className="text-sm font-semibold text-ink">Öne Çıkar</p>
-                  <p className="text-xs text-ink-muted">Coral “Günün Balığı” rozeti</p>
+                  <p className="text-xs text-ink-muted">Coral “Şefin Önerisi” rozeti</p>
                 </div>
                 <Toggle
                   checked={isFeatured}
