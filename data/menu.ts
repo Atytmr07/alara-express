@@ -79,6 +79,7 @@ function p(
   price: number,
   allergens: string,
   description: string,
+  extra?: Partial<Product>,
 ): Product {
   return {
     id,
@@ -92,27 +93,29 @@ function p(
     imageUrl: "",
     isFeatured: false,
     isActive: true,
+    ...extra,
   };
 }
+
+/** Tek/Duble helper: single card showing both prices. */
+const TWO_SIZE = (price2: number): Partial<Product> => ({
+  price2,
+  priceLabel: "Tek",
+  price2Label: "Duble",
+});
 
 export const PRODUCTS: Product[] = [
   // --- Çorbalar ---
   p("balik-corbasi", "corbalar", "Balık Çorbası", 295, "Balık", "Günün balığından, sıcacık."),
   p("gunun-corbasi", "corbalar", "Günün Çorbası", 0, "", "Günün çorbası — lütfen sorunuz."),
 
-  // --- Salatalar ---
-  p("alara-salata-tek", "salatalar", "Alara Salata (Tek)", 275, "", "Alara usulü özel salata."),
-  p("alara-salata-duble", "salatalar", "Alara Salata (Duble)", 375, "", "Alara usulü özel salata — duble porsiyon."),
-  p("kasik-salata-tek", "salatalar", "Kaşık Salata (Tek)", 275, "", "İnce doğranmış mevsim salatası."),
-  p("kasik-salata-duble", "salatalar", "Kaşık Salata (Duble)", 375, "", "İnce doğranmış mevsim salatası — duble."),
-  p("coban-salata-tek", "salatalar", "Çoban Salata (Tek)", 275, "", "Domates, salatalık, biber ve soğan."),
-  p("coban-salata-duble", "salatalar", "Çoban Salata (Duble)", 375, "", "Klasik çoban salata — duble."),
-  p("gavurdag-salata-tek", "salatalar", "Gavurdağ Salata (Tek)", 325, "Kuruyemiş", "Cevizli, nar ekşili gavurdağ."),
-  p("gavurdag-salata-duble", "salatalar", "Gavurdağ Salata (Duble)", 390, "Kuruyemiş", "Cevizli gavurdağ — duble."),
-  p("roka-salata-tek", "salatalar", "Roka Salata (Tek)", 275, "", "Taze roka, limon ve zeytinyağı."),
-  p("roka-salata-duble", "salatalar", "Roka Salata (Duble)", 375, "", "Taze roka — duble."),
-  p("mevsim-salata-tek", "salatalar", "Mevsim Salata (Tek)", 260, "", "Mevsim yeşillikleri."),
-  p("mevsim-salata-duble", "salatalar", "Mevsim Salata (Duble)", 295, "", "Mevsim yeşillikleri — duble."),
+  // --- Salatalar (Tek/Duble tek kartta) ---
+  p("alara-salata", "salatalar", "Alara Salata", 275, "", "Alara usulü özel salata.", TWO_SIZE(375)),
+  p("kasik-salata", "salatalar", "Kaşık Salata", 275, "", "İnce doğranmış mevsim salatası.", TWO_SIZE(375)),
+  p("coban-salata", "salatalar", "Çoban Salata", 275, "", "Domates, salatalık, biber ve soğan.", TWO_SIZE(375)),
+  p("gavurdag-salata", "salatalar", "Gavurdağ Salata", 325, "Kuruyemiş", "Cevizli, nar ekşili gavurdağ.", TWO_SIZE(390)),
+  p("roka-salata", "salatalar", "Roka Salata", 275, "", "Taze roka, limon ve zeytinyağı.", TWO_SIZE(375)),
+  p("mevsim-salata", "salatalar", "Mevsim Salata", 260, "", "Mevsim yeşillikleri.", TWO_SIZE(295)),
 
   // --- Mezeler (hepsi 220 ₺) ---
   p("atom", "mezeler", "Atom", 220, "Süt", "Acılı yoğurtlu meze."),

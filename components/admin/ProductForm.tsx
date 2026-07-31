@@ -14,6 +14,9 @@ export interface ProductFormValues {
   calories: number;
   portion: string;
   price: number;
+  price2: number;
+  priceLabel: string;
+  price2Label: string;
   imageUrl: string;
   isFeatured: boolean;
   isActive: boolean;
@@ -76,6 +79,9 @@ export default function ProductForm({
   const [caloriesStr, setCaloriesStr] = useState("");
   const [portion, setPortion] = useState("");
   const [priceStr, setPriceStr] = useState("");
+  const [price2Str, setPrice2Str] = useState("");
+  const [priceLabel, setPriceLabel] = useState("");
+  const [price2Label, setPrice2Label] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [isFeatured, setIsFeatured] = useState(false);
   const [isActive, setIsActive] = useState(true);
@@ -92,6 +98,9 @@ export default function ProductForm({
     setCaloriesStr(editing ? String(editing.calories) : "");
     setPortion(editing?.portion ?? "");
     setPriceStr(editing ? String(editing.price) : "");
+    setPrice2Str(editing?.price2 ? String(editing.price2) : "");
+    setPriceLabel(editing?.priceLabel ?? "");
+    setPrice2Label(editing?.price2Label ?? "");
     setImageUrl(editing?.imageUrl ?? "");
     setIsFeatured(editing?.isFeatured ?? false);
     setIsActive(editing?.isActive ?? true);
@@ -118,6 +127,12 @@ export default function ProductForm({
       setError("Geçerli bir kalori değeri girin.");
       return;
     }
+    const price2Num = price2Str.trim() ? Number(price2Str) : 0;
+    if (price2Str.trim() && (!Number.isFinite(price2Num) || price2Num < 0)) {
+      setError("Geçerli bir ikinci fiyat girin.");
+      return;
+    }
+    const hasSecond = price2Num > 0;
 
     onSubmit({
       name: trimmed,
@@ -127,6 +142,9 @@ export default function ProductForm({
       calories: Math.round(calories),
       portion: portion.trim(),
       price: Math.round(price),
+      price2: hasSecond ? Math.round(price2Num) : 0,
+      priceLabel: hasSecond ? priceLabel.trim() || "Tek" : "",
+      price2Label: hasSecond ? price2Label.trim() || "Duble" : "",
       imageUrl: imageUrl.trim(),
       isFeatured,
       isActive,
@@ -277,6 +295,44 @@ export default function ProductForm({
                     autoComplete="off"
                   />
                 </div>
+              </div>
+
+              <div>
+                <span className={labelCls}>
+                  İkinci porsiyon (opsiyonel — ör. Tek/Duble)
+                </span>
+                <div className="mt-1.5 grid grid-cols-3 gap-2">
+                  <input
+                    value={priceLabel}
+                    onChange={(e) => setPriceLabel(e.target.value)}
+                    className="w-full rounded-xl border border-line bg-foam px-3 py-3 text-sm text-ink outline-none transition-colors placeholder:text-ink-muted focus:border-sea"
+                    placeholder="Tek"
+                    aria-label="1. porsiyon etiketi"
+                    autoComplete="off"
+                  />
+                  <input
+                    value={price2Label}
+                    onChange={(e) => setPrice2Label(e.target.value)}
+                    className="w-full rounded-xl border border-line bg-foam px-3 py-3 text-sm text-ink outline-none transition-colors placeholder:text-ink-muted focus:border-sea"
+                    placeholder="Duble"
+                    aria-label="2. porsiyon etiketi"
+                    autoComplete="off"
+                  />
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    min={0}
+                    step={5}
+                    value={price2Str}
+                    onChange={(e) => setPrice2Str(e.target.value)}
+                    className="w-full rounded-xl border border-line bg-foam px-3 py-3 text-sm text-ink outline-none transition-colors placeholder:text-ink-muted focus:border-sea"
+                    placeholder="2. ₺"
+                    aria-label="2. fiyat"
+                  />
+                </div>
+                <p className="mt-1 text-xs text-ink-muted">
+                  2. fiyat girilirse kartta “Tek · Duble” iki fiyat gösterilir.
+                </p>
               </div>
 
               <div>

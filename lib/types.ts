@@ -29,6 +29,12 @@ export interface Product {
   portion: string;
   /** Price in Turkish Lira (₺), integer. */
   price: number;
+  /** Optional second size price (e.g. Duble). */
+  price2?: number;
+  /** Label for the first price (e.g. "Tek"). */
+  priceLabel?: string;
+  /** Label for the second price (e.g. "Duble"). */
+  price2Label?: string;
   /** Remote URL or base64 dataURL (admin uploads). Empty => branded fallback. */
   imageUrl: string;
   /** Highlights the item with the coral "Şefin Önerisi" badge. */

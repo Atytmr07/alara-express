@@ -125,15 +125,36 @@ export default function ProductCard({
           <div className="mt-1 flex items-end justify-between gap-2">
             <div className="min-w-0">
               {product.price > 0 ? (
-                <span className="block font-sans text-base font-bold tabular-nums text-sea">
-                  {formatPrice(product.price)}
-                </span>
+                <>
+                  <span className="flex items-baseline gap-1">
+                    {product.priceLabel && (
+                      <span className="text-[11px] font-medium text-ink-muted">
+                        {product.priceLabel}
+                      </span>
+                    )}
+                    <span className="font-sans text-base font-bold tabular-nums text-sea">
+                      {formatPrice(product.price)}
+                    </span>
+                  </span>
+                  {product.price2 && product.price2 > 0 ? (
+                    <span className="mt-0.5 flex items-baseline gap-1">
+                      {product.price2Label && (
+                        <span className="text-[11px] font-medium text-ink-muted">
+                          {product.price2Label}
+                        </span>
+                      )}
+                      <span className="font-sans text-sm font-semibold tabular-nums text-sea-deep">
+                        {formatPrice(product.price2)}
+                      </span>
+                    </span>
+                  ) : null}
+                </>
               ) : (
                 <span className="block font-sans text-sm font-semibold text-sea">
                   Sorunuz
                 </span>
               )}
-              {(product.calories > 0 || product.portion) && (
+              {!product.price2 && (product.calories > 0 || product.portion) && (
                 <span className="mt-0.5 flex items-center gap-1 text-[11px] text-ink-muted">
                   {product.calories > 0 && (
                     <>
