@@ -31,3 +31,6 @@ next-env.d.ts
 
 # Never publish stray PDFs from public/
 public/*.pdf
+
+# Firebase deploy cache
+.firebase/
