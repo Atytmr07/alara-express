@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Loader2 } from "lucide-react";
 import { useMenu } from "@/lib/useMenu";
 import BrandHeader from "./BrandHeader";
 import CategoryTabs from "./CategoryTabs";
@@ -11,7 +12,7 @@ import MenuFooter from "./MenuFooter";
 // Single continuous menu: all categories stacked top-to-bottom. The sticky tab
 // bar jumps to a category's section and stays in sync via scroll-spy.
 export default function MenuClient() {
-  const { data } = useMenu();
+  const { data, loading } = useMenu();
 
   const sections = useMemo(
     () =>
@@ -75,7 +76,15 @@ export default function MenuClient() {
     <>
       <BrandHeader />
 
-      {sections.length === 0 ? (
+      {loading ? (
+        <div
+          className="flex justify-center py-20 text-sea"
+          role="status"
+          aria-label="Menü yükleniyor"
+        >
+          <Loader2 className="h-7 w-7 animate-spin" aria-hidden="true" />
+        </div>
+      ) : sections.length === 0 ? (
         <p className="px-6 py-16 text-center text-sm text-ink-muted">
           Menü şu anda güncelleniyor. Lütfen kısa süre sonra tekrar deneyin.
         </p>

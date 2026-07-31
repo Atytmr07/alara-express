@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 // Restaurant + Menu structured data (incl. per-item nutrition), built from the
 // canonical mock menu.
 function buildJsonLd() {
-  const telephone = toTelHref(business.phones[1]).replace("tel:", "");
+  const telephone = toTelHref(business.phones[0]).replace("tel:", "");
 
   return {
     "@context": "https://schema.org",

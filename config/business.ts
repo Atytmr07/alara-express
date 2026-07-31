@@ -25,9 +25,9 @@ export const business = {
     country: "TR",
   },
 
-  phones: ["0242 446 11 11", "0536 966 36 52"],
-  whatsapp: "https://wa.me/905369663652",
-  whatsappNumber: "905369663652",
+  phones: ["0 (506) 407 53 11"],
+  whatsapp: "https://wa.me/905064075311",
+  whatsappNumber: "905064075311",
 
   instagram: "https://www.instagram.com/alaraexpress/",
   facebook: "https://www.facebook.com/alaraexpress",

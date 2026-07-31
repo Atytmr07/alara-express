@@ -2,31 +2,23 @@
 
 import { useEffect, useState } from "react";
 import { fetchMenu } from "./menuRepo";
-import { INITIAL_MENU } from "@/data/menu";
 import type { MenuData } from "./types";
 
-// Customer menu: initialise with the bundled mock so the first paint is never
-// empty (and SSR === first client render), then fetch the live menu once.
-// If the fetch fails or Firestore is still empty, the mock stays as a safe
-// fallback so the public page never looks broken.
-const SEED: MenuData = {
-  categories: INITIAL_MENU.categories,
-  products: INITIAL_MENU.products,
-};
-
+// Customer menu — reads live from Firestore only. Starts empty (loading) and
+// shows the database result; no bundled/mock content is ever displayed to
+// guests. (The bundled menu in data/menu.ts is used solely to seed Firestore.)
 export function useMenu() {
-  const [data, setData] = useState<MenuData>(SEED);
+  const [data, setData] = useState<MenuData>({ categories: [], products: [] });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let alive = true;
     fetchMenu()
       .then((next) => {
-        if (!alive) return;
-        setData(next.products.length ? next : SEED);
+        if (alive) setData(next);
       })
       .catch(() => {
-        /* keep SEED */
+        /* leave empty; UI shows the updating state */
       })
       .finally(() => {
         if (alive) setLoading(false);

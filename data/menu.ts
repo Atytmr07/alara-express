@@ -193,6 +193,7 @@ export const PRODUCTS: Product[] = [
   p("incir-tatlisi", "tatlilar", "İncir Tatlısı", 395, "Kuruyemiş", "Cevizli incir tatlısı."),
   p("kabak-tatlisi", "tatlilar", "Kabak Tatlısı", 325, "Kuruyemiş", "Tahinli, cevizli kabak tatlısı."),
   p("dondurmali-irmik-tatlisi", "tatlilar", "Dondurmalı İrmik Tatlısı", 300, "Gluten, Süt, Kuruyemiş", "Dondurmalı sıcak irmik tatlısı."),
+  p("magnolia", "tatlilar", "Magnolia", 300, "Gluten, Süt", "Bisküvili, sütlü kremalı magnolia."),
 ];
 
 /** Immutable snapshot used to seed Firestore and as the read fallback. */
