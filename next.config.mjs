@@ -1,11 +1,23 @@
+// Static export is opt-in via NEXT_STATIC_EXPORT=1 (used for Firebase Hosting).
+// Without it (e.g. on Vercel) the app builds exactly as before — SSR + next/image
+// optimization + the /menu redirect — so existing deploys are untouched.
+const isExport = process.env.NEXT_STATIC_EXPORT === "1";
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  async redirects() {
-    // The menu now lives at the root; forward the old path.
-    return [{ source: "/menu", destination: "/", permanent: true }];
-  },
+  ...(isExport ? { output: "export" } : {}),
+  // redirects() aren't supported by static export — handled in firebase.json there.
+  ...(isExport
+    ? {}
+    : {
+        async redirects() {
+          return [{ source: "/menu", destination: "/", permanent: true }];
+        },
+      }),
   images: {
+    // Static export can't run the optimizer; serve images as-is in that mode.
+    unoptimized: isExport,
     remotePatterns: [
       {
         protocol: "https",
