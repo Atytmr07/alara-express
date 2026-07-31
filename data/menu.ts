@@ -52,7 +52,7 @@ export const CATEGORIES: Category[] = [
     id: "cig-baliklar",
     slug: "cig-baliklar",
     name: "Çiğ Balıklar",
-    subtitle: "Tezgahtan, günlük taze",
+    subtitle: "Tezgahtan seçilir · pişirme ekstra ücretlidir",
     image: img("1559737558-2f5a35f4523b"),
   },
   {
