@@ -1,6 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  async redirects() {
+    // The menu now lives at the root; forward the old path.
+    return [{ source: "/menu", destination: "/", permanent: true }];
+  },
   images: {
     remotePatterns: [
       {

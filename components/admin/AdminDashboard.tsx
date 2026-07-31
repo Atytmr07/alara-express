@@ -332,7 +332,7 @@ export default function AdminDashboard() {
 
         <div className="flex items-center gap-2">
           <Link
-            href="/menu"
+            href="/"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-line bg-foam px-3 text-sm font-semibold text-ink-soft transition-colors hover:bg-sea-wash"

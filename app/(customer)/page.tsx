@@ -5,19 +5,18 @@ import GrainOverlay from "@/components/customer/GrainOverlay";
 import MenuClient from "@/components/customer/MenuClient";
 
 export const metadata: Metadata = {
-  title: "Menü",
   description:
     "Alara Balık Express dijital menüsü — meze, ara sıcak, ızgara balık, deniz ürünleri, çiğ/taze balık, tatlı ve alkolsüz içecekler. Kalori ve porsiyon bilgileriyle. Antalya Kepez'de 1975'ten beri.",
-  alternates: { canonical: "/menu" },
+  alternates: { canonical: "/" },
   openGraph: {
     title: `${business.name} — Menü`,
     description: "1975'ten beri Akdeniz'in en taze lezzetleri. Tüm menüyü keşfedin.",
-    url: "/menu",
+    url: "/",
   },
 };
 
 // Restaurant + Menu structured data (incl. per-item nutrition), built from the
-// canonical mock menu.
+// canonical menu.
 function buildJsonLd() {
   const telephone = toTelHref(business.phones[0]).replace("tel:", "");
 
@@ -27,7 +26,7 @@ function buildJsonLd() {
     name: business.name,
     description: business.about,
     image: `${business.siteUrl}${business.logo}`,
-    url: `${business.siteUrl}/menu`,
+    url: business.siteUrl,
     telephone,
     servesCuisine: ["Deniz ürünleri", "Akdeniz mutfağı", "Türk mutfağı"],
     priceRange: "₺₺",
@@ -101,7 +100,7 @@ function buildJsonLd() {
   };
 }
 
-export default function MenuPage() {
+export default function HomePage() {
   const jsonLd = buildJsonLd();
 
   return (

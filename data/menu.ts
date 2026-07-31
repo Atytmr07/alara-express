@@ -172,7 +172,7 @@ export const PRODUCTS: Product[] = [
     "Günün Çiğ Balığı",
     0,
     "Balık",
-    "Günün taze çiğ balıkları için tezgahımızdan bilgi alabilirsiniz.",
+    "Günün taze çiğ balıkları için tezgahtan bilgi alabilirsiniz. İsteğe göre pişirme (ızgara/tava) ekstra ücretlidir.",
   ),
 
   // --- Meşrubatlar ---
