@@ -5,15 +5,50 @@ import { ImagePlus, Link2, Loader2, X } from "lucide-react";
 import { isFirebaseConfigured } from "@/lib/firebase";
 import { uploadProductImage } from "@/lib/menuAdmin";
 
-const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
+const MAX_BYTES = 5 * 1024 * 1024; // 5 MB (after compression — never hit in practice)
+const MAX_DIM = 1600; // longest edge after resize
 
-function readAsDataURL(file: File): Promise<string> {
+function readAsDataURL(file: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(reader.error);
+    reader.onerror = () => reject(reader.error || new Error("okuma hatası"));
     reader.readAsDataURL(file);
   });
+}
+
+function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = document.createElement("img");
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error("görsel çözümlenemedi"));
+    img.src = src;
+  });
+}
+
+// Resize + re-encode to JPEG in the browser. This fixes two real problems:
+// phone photos are often >5MB, and iPhone photos are HEIC (won't display).
+// After this they're small JPEGs that upload fast and render everywhere.
+async function compressToJpeg(file: File): Promise<File> {
+  const dataUrl = await readAsDataURL(file);
+  const img = await loadImage(dataUrl);
+  let { width, height } = img;
+  if (Math.max(width, height) > MAX_DIM) {
+    const scale = MAX_DIM / Math.max(width, height);
+    width = Math.round(width * scale);
+    height = Math.round(height * scale);
+  }
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("canvas desteklenmiyor");
+  ctx.drawImage(img, 0, 0, width, height);
+  const blob = await new Promise<Blob | null>((resolve) =>
+    canvas.toBlob((b) => resolve(b), "image/jpeg", 0.82),
+  );
+  if (!blob) throw new Error("görsel dönüştürülemedi");
+  return new File([blob], "photo.jpg", { type: "image/jpeg" });
 }
 
 // Uploads the chosen photo to Firebase Storage and stores its download URL.
@@ -33,20 +68,40 @@ export default function ImageUploader({
     const file = e.target.files?.[0];
     if (!file) return;
     setError("");
-
-    if (file.size > MAX_BYTES) {
-      setError("Görsel çok büyük (maks. 5MB). Daha küçük bir fotoğraf seçin.");
-      return;
-    }
-
     setLoading(true);
+
     try {
+      // Shrink + convert to JPEG (handles big files & HEIC). Fall back to the
+      // original only if the browser can't decode it.
+      let toUpload: File = file;
+      try {
+        toUpload = await compressToJpeg(file);
+      } catch {
+        toUpload = file;
+      }
+
+      if (toUpload.size > MAX_BYTES) {
+        setError("Görsel çok büyük. Lütfen daha küçük bir fotoğraf deneyin.");
+        return;
+      }
+
       const url = isFirebaseConfigured
-        ? await uploadProductImage(file)
-        : await readAsDataURL(file);
+        ? await uploadProductImage(toUpload)
+        : await readAsDataURL(toUpload);
       onChange(url);
-    } catch {
-      setError("Görsel yüklenemedi. Lütfen tekrar deneyin.");
+    } catch (err) {
+      console.error("Görsel yükleme hatası:", err);
+      const detail =
+        typeof err === "object" && err && "code" in err
+          ? String((err as { code: string }).code)
+          : err instanceof Error
+            ? err.message
+            : "";
+      setError(
+        detail
+          ? `Görsel yüklenemedi (${detail}). Tekrar deneyin.`
+          : "Görsel yüklenemedi. Tekrar deneyin.",
+      );
     } finally {
       setLoading(false);
       // Allow re-selecting the same file later.
@@ -100,7 +155,7 @@ export default function ImageUploader({
             ) : (
               <ImagePlus className="h-4 w-4 text-sea" aria-hidden="true" />
             )}
-            Fotoğraf Seç / Çek
+            {loading ? "Yükleniyor…" : "Fotoğraf Seç / Çek"}
           </button>
 
           <div className="flex items-center gap-2 rounded-xl border border-line bg-foam px-3">
@@ -118,11 +173,11 @@ export default function ImageUploader({
         </div>
       </div>
 
+      {/* No `capture` attr → phone offers Camera *and* Gallery (more reliable). */}
       <input
         ref={inputRef}
         type="file"
         accept="image/*"
-        capture="environment"
         onChange={handleFile}
         className="hidden"
         aria-hidden="true"
