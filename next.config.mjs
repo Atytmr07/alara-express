@@ -16,8 +16,10 @@ const nextConfig = {
         },
       }),
   images: {
-    // Static export can't run the optimizer; serve images as-is in that mode.
-    unoptimized: isExport,
+    // Serve images as-is (no Vercel Image Optimization → 0 transformations).
+    // Sources are already right-sized: product photos are compressed to JPEG on
+    // upload, and category banners come pre-sized from Unsplash.
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: "https",

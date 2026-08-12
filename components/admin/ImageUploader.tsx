@@ -6,7 +6,7 @@ import { isFirebaseConfigured } from "@/lib/firebase";
 import { uploadProductImage } from "@/lib/menuAdmin";
 
 const MAX_BYTES = 5 * 1024 * 1024; // 5 MB (after compression — never hit in practice)
-const MAX_DIM = 1600; // longest edge after resize
+const MAX_DIM = 1280; // longest edge after resize (kept small — served as-is)
 
 function readAsDataURL(file: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -45,7 +45,7 @@ async function compressToJpeg(file: File): Promise<File> {
   if (!ctx) throw new Error("canvas desteklenmiyor");
   ctx.drawImage(img, 0, 0, width, height);
   const blob = await new Promise<Blob | null>((resolve) =>
-    canvas.toBlob((b) => resolve(b), "image/jpeg", 0.82),
+    canvas.toBlob((b) => resolve(b), "image/jpeg", 0.75),
   );
   if (!blob) throw new Error("görsel dönüştürülemedi");
   return new File([blob], "photo.jpg", { type: "image/jpeg" });
